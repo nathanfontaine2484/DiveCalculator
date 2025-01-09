@@ -1,0 +1,70 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #ffffff;
+}
+
+h1 {
+    text-align: center;
+    font-family: "Courier New", Courier, monospace;
+    color: #003366;
+}
+
+.controls {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.timer {
+    margin: 10px 0;
+    font-size: 1.5rem;
+    font-family: "Courier New", Courier, monospace;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background-color: #ffffff;
+}
+
+table th, table td {
+    border: 1px solid #000000;
+    text-align: center;
+    padding: 10px;
+    font-family: "Courier New", Courier, monospace;
+}
+
+table th {
+    background-color: #003366;
+    color: white;
+}
+
+table tr:nth-child(even) {
+    background-color: #e6e6ff;
+}
+
+button {
+    display: inline-block;
+    margin: 0 10px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    background-color: #003366;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
+    background-color: #00509e;
+}
+
+.highlight {
+    background-color: #ffcccb !important;
+}

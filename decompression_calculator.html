@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decompression Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Decompression Calculator</h1>
+    <div class="controls">
+        <div>
+            <label for="depthSelect">Select Anticipated Depth (FSW): </label>
+            <select id="depthSelect">
+                <!-- Options dynamically generated here -->
+            </select>
+        </div>
+        <div class="timer">
+            Time Elapsed: <span id="timer">00:00.00</span>
+        </div>
+        <button id="startButton">Start</button>
+        <button id="stopButton" disabled>Stop</button>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Depth (FSW)</th>
+                <th>Original No-Stop Limit (min)</th>
+                <th>Dynamic No-Stop Limit (min)</th>
+                <th>Repetitive Group Designation (RGD)</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- Data will be dynamically inserted here -->
+        </tbody>
+    </table>
+    <script src="script.js"></script>
+</body>
+</html>
