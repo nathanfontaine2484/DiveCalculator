@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="An interactive no-decompression limits calculator based on the US Navy Diving Manual Rev 7. Learn about dive planning and safety with real-time updates.">
+    <title>No-Decompression Limits Live Chart</title>
+    <link rel="stylesheet" href="diveStyles.css">
+</head>
+<body>
+    <h1>US NAVY REV 7 No-Decompression Limits Live Chart</h1>
+    <div class="controls">
+        <label for="depthSelect">Select Anticipated Depth:</label>
+        <select id="depthSelect">
+            <option value="0">Select Depth</option>
+        </select>
+        <button id="startButton">Start</button>
+        <button id="stopButton" style="display: none;">Stop</button>
+    </div>
+    <div class="timer">
+        Time Elapsed: <span id="timer">00:00.00</span>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Depth (FSW)</th>
+                <th>Original No-Stop Limit (min)</th>
+                <th>Remaining Time (min)</th>
+                <th>Repetitive Group Designation (RGD)</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+        </tbody>
+    </table>
+    <div id="log" class="log" style="display: none;">
+        <h3>Dive Log</h3>
+        <div id="logContent"></div>
+    </div>
+
+    <script type="module">
+        import { noStopLimits, rgdData } from './diveData.js';
+
+        let startTime;
+        let elapsedMilliseconds = 0;
+        let interval;
+        let selectedDepth = 0;
+        let initialStart = true;  // To track initial start
+
+        const timerElement = document.getElementById('timer');
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const depthSelect = document.getElementById('depthSelect');
+        const tableBody = document.getElementById('tableBody');
+        const log = document.getElementById('log');
+        const logContent = document.getElementById('logContent');
+
+        function populateDepthSelect() {
+            noStopLimits.forEach(row => {
+                const option = document.createElement('option');
+                option.value = row.depth;
+                option.textContent = `${row.depth} ft`;
+                depthSelect.appendChild(option);
+            });
+        }
+
+        function highlightRow() {
+            document.querySelectorAll('#tableBody tr').forEach(row => {
+                row.classList.remove('selected-row');
+                const depthCell = row.querySelector('td:first-child');
+                if (parseInt(depthCell.textContent) === selectedDepth) {
+                    row.classList.add('selected-row');
+                }
+            });
+        }
+
+function updateTable() {
+    tableBody.innerHTML = '';
+    noStopLimits.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.addEventListener('click', () => {
+            selectedDepth = row.depth;
+            depthSelect.value = row.depth;
+            highlightRow();
+        });
+
+        const depthTd = document.createElement('td');
+        depthTd.textContent = row.depth;
+        tr.appendChild(depthTd);
+
+        const originalLimitTd = document.createElement('td');
+        originalLimitTd.textContent = row.limit;
+        tr.appendChild(originalLimitTd);
+
+        const dynamicLimitTd = document.createElement('td');
+        let remainingTime;
+        if (row.limit === 'Unlimited') {
+            dynamicLimitTd.textContent = 'Unlimited';
+            dynamicLimitTd.className = 'green';
+            remainingTime = null;
+        } else {
+            const elapsedSeconds = Math.floor(elapsedMilliseconds / 1000);
+            const remainingSeconds = (row.limit * 60) - elapsedSeconds;
+            remainingTime = remainingSeconds > 0 ? remainingSeconds : 0;
+
+            const minutes = Math.floor(remainingTime / 60).toString().padStart(2, '0');
+            const seconds = (remainingTime % 60).toString().padStart(2, '0');
+
+            dynamicLimitTd.textContent = remainingTime > 0 ? `${minutes}:${seconds}` : 'Exceeded: See In-Water Stops';
+            dynamicLimitTd.className = (remainingTime > row.limit * 30) ? 'green' :
+                (remainingTime > row.limit * 15) ? 'orange' : 'red';
+
+            if (remainingTime <= 0) dynamicLimitTd.className = 'exceeded';
+        }
+        tr.appendChild(dynamicLimitTd);
+
+        const rgdTd = document.createElement('td');
+        const elapsedMinutes = elapsedMilliseconds > 0 ? Math.floor(elapsedMilliseconds / 60000) : 0;
+
+        // Always calculate RGD with initial time as 0
+        const rgd = getRepetitiveGroup(row.depth, elapsedMinutes);
+        rgdTd.textContent = rgd !== null ? rgd : 'N/A';
+
+        tr.appendChild(rgdTd);
+        tableBody.appendChild(tr);
+    });
+
+    highlightRow();
+}
+
+
+function getRepetitiveGroup(depth, time) {
+    if (!rgdData[depth]) return "N/A"; // Handle missing data
+    const { times, designations } = rgdData[depth];
+    
+    // Return the first designation ("A") if time is 0 or less than the first threshold
+    if (time <= times[0]) {
+        return designations[0];
+    }
+
+    // Find the appropriate designation for the given time
+    for (let i = 0; i < times.length; i++) {
+        if (time <= times[i]) return designations[i];
+    }
+
+    // If time exceeds all thresholds, return the last designation
+    return designations[designations.length - 1];
+}
+
+        function formatTime(milliseconds) {
+            const totalSeconds = Math.floor(milliseconds / 1000);
+            const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+            const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+            const millis = (milliseconds % 1000).toString().padStart(3, '0').slice(0, 2);
+            return `${minutes}:${seconds}.${millis}`;
+        }
+
+        function startTimer() {
+            if (initialStart) {
+                initialStart = false;
+            }
+
+            startButton.style.display = 'none';
+            stopButton.style.display = 'inline-block';
+
+            startTime = Date.now() - elapsedMilliseconds;
+
+            interval = setInterval(updateElapsedTime, 100);
+        }
+
+        function updateElapsedTime() {
+            elapsedMilliseconds = Date.now() - startTime;
+            timerElement.textContent = formatTime(elapsedMilliseconds);
+            updateTable();
+        }
+
+        function stopTimer() {
+            clearInterval(interval);
+            stopButton.style.display = 'none';
+            startButton.style.display = 'inline-block';
+
+            const timeReachedSurface = new Date().toLocaleString();
+
+            let confirmedDepth = selectedDepth; // Assume selected depth is chosen
+            const selectedRow = noStopLimits.find(row => row.depth >= confirmedDepth);
+            const rgd = getRepetitiveGroup(selectedRow.depth, Math.floor(elapsedMilliseconds / 60000));
+
+            logContent.innerHTML = `
+                <p>Depth Reached: ${confirmedDepth} ft</p>
+                <p>Total Dive Time: ${formatTime(elapsedMilliseconds)}</p>
+                <p>No-Stop Limit at Depth: ${selectedRow.limit}</p>
+                <p>Repetitive Group Designation: ${rgd}</p>
+                <p>Start Time: ${new Date(startTime).toLocaleString()}</p>
+                <p>Time Reached Surface: ${timeReachedSurface}</p>
+            `;
+
+            log.style.display = 'block';
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            populateDepthSelect();
+            updateTable();
+
+            depthSelect.addEventListener('change', (event) => {
+                selectedDepth = parseInt(event.target.value);
+                highlightRow();
+            });
+
+            startButton.addEventListener('click', startTimer);
+            stopButton.addEventListener('click', stopTimer);
+        });
+
+    </script>
+    <div style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #555;">
+        <p><strong>Disclaimer:</strong> This tool is for informational and educational purposes only...</p>
+    </div>
+</body>
+
+</html>
