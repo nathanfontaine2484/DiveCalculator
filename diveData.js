@@ -52,4 +52,6 @@ const rgdData = {
     190: { times: [3, 5, 5.1], designations: ["C", "D"] }
 };
 
-export { noStopLimits, rgdData };
+// Expose data on the global object so dive.html can access it without ES modules
+window.noStopLimits = noStopLimits;
+window.rgdData = rgdData;

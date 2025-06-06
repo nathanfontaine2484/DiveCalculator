@@ -38,8 +38,9 @@
         <div id="logContent"></div>
     </div>
 
-    <script type="module">
-        import { noStopLimits, rgdData } from './diveData.js';
+    <!-- Load dive data before running the main script -->
+    <script src="diveData.js"></script>
+    <script>
 
         let startTime;
         let elapsedMilliseconds = 0;
