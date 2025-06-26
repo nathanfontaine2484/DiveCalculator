@@ -10,13 +10,6 @@
 </head>
 <body>
     <h1>US NAVY REV 7 No-Decompression Limits Live Chart</h1>
-    <div class="top-bar">
-        <button id="logItButton">Log It</button>
-        <label class="theme-switch">
-            <input type="checkbox" id="themeToggle">
-            <span class="slider"></span>
-        </label>
-    </div>
     <div class="controls">
         <label for="depthSelect">Select Anticipated Depth:</label>
         <select id="depthSelect">
@@ -44,26 +37,6 @@
         <h3>Dive Log</h3>
         <div id="logContent"></div>
     </div>
-    <div id="logForm" class="log-form" style="display:none;">
-        <h3>Dive Log Details</h3>
-        <form id="diveForm">
-            <label>Company Name: <input type="text" id="companyName"></label><br>
-            <label>Company Address: <input type="text" id="companyAddress"></label><br>
-            <label>Location: <input type="text" id="location"></label><br>
-            <label>Date &amp; Time: <input type="text" id="diveDateTime" readonly></label><br>
-            <label>Dive Supervisor: <input type="text" id="supervisor"></label><br>
-            <label>Diver: <input type="text" id="diver"></label><br>
-            <label>Tender: <input type="text" id="tender"></label><br>
-            <div id="additionalPeople"></div>
-            <button type="button" id="addPerson">Add Person</button><br>
-            <label>Depth of Dive: <input type="text" id="depthLogged" readonly></label><br>
-            <label>Bottom Time: <input type="text" id="bottomTimeLogged" readonly></label><br>
-            <label>Sea State: <select id="seaState"><option>Calm</option><option>Moderate</option><option>Rough</option></select></label><br>
-            <label>Visibility: <select id="visibility"><option>Poor</option><option>Fair</option><option>Good</option><option>Excellent</option></select></label><br>
-            <label>Current: <select id="current"><option>None</option><option>Mild</option><option>Moderate</option><option>Strong</option></select></label><br>
-            <label>Decompression Table: <input type="text" id="decoTable" value="US Navy Rev 7" readonly></label>
-        </form>
-    </div>
 
     <!-- Load dive data before running the main script -->
     <script src="diveData.js"></script>
@@ -82,15 +55,6 @@
         const tableBody = document.getElementById('tableBody');
         const log = document.getElementById('log');
         const logContent = document.getElementById('logContent');
-        const logItButton = document.getElementById('logItButton');
-        const logForm = document.getElementById('logForm');
-        const themeToggle = document.getElementById('themeToggle');
-        const diveDateTime = document.getElementById('diveDateTime');
-        const locationInput = document.getElementById('location');
-        const depthLogged = document.getElementById('depthLogged');
-        const bottomTimeLogged = document.getElementById('bottomTimeLogged');
-        const addPersonBtn = document.getElementById('addPerson');
-        const additionalPeople = document.getElementById('additionalPeople');
 
         function populateDepthSelect() {
             noStopLimits.forEach(row => {
@@ -232,49 +196,11 @@ function getRepetitiveGroup(depth, time) {
             `;
 
             log.style.display = 'block';
-
-            depthLogged.value = `${confirmedDepth} ft`;
-            bottomTimeLogged.value = formatTime(elapsedMilliseconds);
         }
 
         window.addEventListener('DOMContentLoaded', () => {
             populateDepthSelect();
             updateTable();
-
-            if (localStorage.getItem('theme') === 'dark') {
-                document.body.classList.add('dark-mode');
-                themeToggle.checked = true;
-            }
-
-            themeToggle.addEventListener('change', () => {
-                if (themeToggle.checked) {
-                    document.body.classList.add('dark-mode');
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    document.body.classList.remove('dark-mode');
-                    localStorage.setItem('theme', 'light');
-                }
-            });
-
-            logItButton.addEventListener('click', () => {
-                logForm.style.display = logForm.style.display === 'none' ? 'block' : 'none';
-                if (logForm.style.display === 'block') {
-                    diveDateTime.value = new Date().toLocaleString();
-                    if (navigator.geolocation) {
-                        navigator.geolocation.getCurrentPosition(pos => {
-                            locationInput.value = `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
-                        });
-                    }
-                }
-            });
-
-            addPersonBtn.addEventListener('click', () => {
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.placeholder = 'Additional Person';
-                additionalPeople.appendChild(input);
-                additionalPeople.appendChild(document.createElement('br'));
-            });
 
             depthSelect.addEventListener('change', (event) => {
                 selectedDepth = parseInt(event.target.value);
